@@ -28,13 +28,15 @@ Build options:
 - `-Drelease-small` slightly slower but much smaller binary, especially with `-Dstrip`.
 - `-Drelease-fast` fastest possible binary.
 
-To install
+To install, you need zig 0.7.0 or 0.7.1 (other versions might work but I haven't tested them) then run
 
 ```
 zig build --prefix /usr install
 ```
 
 Use one of the build modes when installing so the debug code isn't left in which will bloat it.
+
+It is also available on the AUR as `gmi2html`.
 
 ## Contributing
 
