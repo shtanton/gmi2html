@@ -1,0 +1,42 @@
+Hello world
+My name is charlie
+
+I write things here
+
+=> gemini://example.org/
+=> gemini://example.org/    	
+=> gemini://example.org/ An example link
+=> gemini://example.org/foo Another example link at the same host
+=>gemini://example.org/bar Yet another example link at the same host
+=> foo/bar/baz.txt  A relative link
+=>  gopher://example.org:70/1 A gopher link
+=>https://google.com/<>&"'
+
+```  	Alt text
+some stuff
+goes here
+dunnit
+
++----+
+|    |
++----+
+```
+```
+     spaghet
+<span>hello</span>
+```
+
+#  A heading
+Some text
+##Another heading
+
+
+###	YEET!
+
+* Here is the first thing
+* Here is the second
+*  	Here is the third
+
+> This is a quote line, I quite like these as an idea and I use them sometimes
+
+Back to some more text
