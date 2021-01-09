@@ -42,7 +42,7 @@ const BufferedReader = struct {
 const BufferedWriter = struct {
     const Self = @This();
 
-    buffer: [256]u8,
+    buffer: [WRITE_BUFFER_LEN]u8,
     writer: std.fs.File.Writer,
     len: usize,
 
@@ -64,7 +64,7 @@ const BufferedWriter = struct {
     fn writeByte(self: *Self, byte: u8) !void {
         self.buffer[self.len] = byte;
         self.len += 1;
-        if (self.len==256) {
+        if (self.len==WRITE_BUFFER_LEN) {
             try self.writer.writeAll(&self.buffer);
             self.len = 0;
         }
