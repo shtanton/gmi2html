@@ -2,40 +2,58 @@ const std = @import("std");
 const process = std.process;
 const Allocator = std.mem.Allocator;
 
-const READ_BUFFER_LEN = 256;
-const WRITE_BUFFER_LEN = 256;
+const WRITE_BUFFER_LEN = 8192;
 
 fn trimLeft(str: []const u8) []const u8 {
     return std.mem.trimLeft(u8, str, &[_]u8{' ', '\t'});
 }
 
-const BufferedReader = struct {
+const LineReader = struct {
     const Self = @This();
 
-    buffer: [READ_BUFFER_LEN]u8,
+    buffer: []u8,
     reader: std.fs.File.Reader,
-    index: usize,
+    allocator: *Allocator,
+    nextLineStart: usize,
     len: usize,
 
-    fn init(reader: std.fs.File.Reader) Self {
+    fn init(allocator: *Allocator, reader: std.fs.File.Reader) !Self {
         return Self {
-            .buffer = undefined,
+            .buffer = try allocator.alloc(u8, 32),
             .reader = reader,
-            .index = READ_BUFFER_LEN,
+            .allocator = allocator,
+            .nextLineStart = 0,
             .len = 0,
         };
     }
 
-    fn readByte(self: *Self) !?u8 {
-        if (self.index >= self.len) {
-            self.len = try self.reader.readAll(&self.buffer);
+    fn deinit(self: Self) void {
+        self.allocator.free(self.buffer);
+    }
+
+    fn readLine(self: *Self) !?[]const u8 {
+        // Drop existing line
+        std.mem.copy(u8, self.buffer, self.buffer[self.nextLineStart..self.len]);
+        self.len -= self.nextLineStart;
+        self.nextLineStart = 0;
+        // Find newline char
+        while (true) : (self.nextLineStart += 1) {
+            // Load more file if necessary
+            if (self.nextLineStart >= self.len) {
+                if (self.len == self.buffer.len) {
+                    self.buffer = try self.allocator.realloc(self.buffer, self.buffer.len*2);
+                }
+                self.len += try self.reader.read(self.buffer[self.len..]);
+            }
             if (self.len == 0) {
                 return null;
             }
-            self.index = 0;
+            if (self.nextLineStart >= self.len or self.buffer[self.nextLineStart] == '\n') {
+                const line = self.buffer[0..self.nextLineStart];
+                self.nextLineStart += 1;
+                return line;
+            }
         }
-        self.index += 1;
-        return self.buffer[self.index-1];
     }
 };
 
@@ -94,128 +112,6 @@ const BufferedWriter = struct {
     }
 };
 
-const State = enum {
-    LineStart,
-    BulletLineStart,
-};
-
-/// Copies reader into writer while escaping it until it finds a \n or EOF
-/// returns true if \n and false if EOF
-fn handleLine(reader: *BufferedReader, writer: *BufferedWriter) !bool {
-    while (try reader.readByte()) |byte| {
-        if (byte=='\n') {
-            return true;
-        } else {
-            try writer.writeEscapedByte(byte);
-        }
-    }
-    return false;
-}
-
-/// Ignore any whitespace and return the first non-whitespace character
-/// returns null if there is only whitespace
-fn skipWhitespace(reader: *BufferedReader) !?u8 {
-    while (try reader.readByte()) |byte| {
-        if (byte!=' ' and byte!='\t') {
-            return byte;
-        }
-    }
-    return null;
-}
-
-/// Like handleLine but ignores whitespace at the start
-fn handleLineSkippingWhitespace(reader: *BufferedReader, writer: *BufferedWriter) !bool {
-    if (try skipWhitespace(reader)) |firstByte| {
-        if (firstByte=='\n') {
-            return true;
-        } else {
-            try writer.writeEscapedByte(firstByte);
-            return handleLine(reader, writer);
-        }
-    } else {
-        return false;
-    }
-}
-
-/// Translates a link starting with the reader positioned after =>
-/// Returns false if eof is reached during execution
-fn handleLink(allocator: *Allocator, reader: *BufferedReader, writer: *BufferedWriter) !bool {
-    var addressBuffer = try allocator.alloc(u8, 64);
-    defer allocator.free(addressBuffer);
-    var bytesRead: usize = 0;
-    try writer.writeBytes("<a href=\"");
-    if (try skipWhitespace(reader)) |firstByte| {
-        if (firstByte=='\n') {
-            try writer.writeBytes("\"></a>\n");
-            return true;
-        }
-        bytesRead = 1;
-        try writer.writeEscapedByte(firstByte);
-        addressBuffer[0] = firstByte;
-    } else {
-        try writer.writeBytes("\"></a>");
-        return false;
-    }
-    while (try reader.readByte()) |byte| {
-        switch (byte) {
-            ' ', '\t' => {
-                break;
-            },
-            '\n' => {
-                try writer.writeBytes("\">");
-                try writer.writeEscapedBytes(addressBuffer[0..bytesRead]);
-                try writer.writeBytes("</a>\n");
-                return true;
-            },
-            else => {
-                try writer.writeEscapedByte(byte);
-                if (bytesRead >= addressBuffer.len) {
-                    addressBuffer = try allocator.realloc(addressBuffer, addressBuffer.len*2);
-                }
-                addressBuffer[bytesRead] = byte;
-                bytesRead += 1;
-            },
-        }
-    } else {
-        try writer.writeBytes("\">");
-        try writer.writeEscapedBytes(addressBuffer[0..bytesRead]);
-        try writer.writeBytes("</a>");
-        return false;
-    }
-    try writer.writeBytes("\">");
-    if (try skipWhitespace(reader)) |firstByte| {
-        if (firstByte=='\n') {
-            try writer.writeEscapedBytes(addressBuffer[0..bytesRead]);
-            try writer.writeBytes("</a>\n");
-            return true;
-        } else {
-            try writer.writeEscapedByte(firstByte);
-        }
-    } else {
-        try writer.writeEscapedBytes(addressBuffer[0..bytesRead]);
-        try writer.writeBytes("</a>");
-        return false;
-    }
-    const newline = try handleLine(reader, writer);
-    try writer.writeBytes("</a>");
-    if (newline) {
-        try writer.writeByte('\n');
-    }
-    return newline;
-}
-
-fn handlePreformat(reader: *BufferedReader, writer: *BufferedWriter) !void {
-}
-
-fn handleHeader(n: u8, reader: *BufferedReader, writer: *BufferedWriter) !void {
-}
-
-fn handleBullet(reader: *BufferedReader, writer: *BufferedWriter) !void {
-}
-
-fn handleQuote(reader: *BufferedReader, writer: *BufferedWriter) !void {
-}
-
 pub fn main() anyerror!void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
@@ -231,132 +127,13 @@ pub fn main() anyerror!void {
     else
         std.io.getStdIn();
     defer inputFile.close();
-    var reader = BufferedReader.init(inputFile.reader());
+    var reader = try LineReader.init(allocator, inputFile.reader());
     var writer = BufferedWriter.init(std.io.getStdOut().writer());
-    var state: State = .LineStart;
 
-    while (try reader.readByte()) |byte| {
-        switch (state) {
-            .LineStart => switch (byte) {
-                '\n' => {
-                    try writer.writeBytes("<br/>\n");
-                },
-                '=' => {
-                    if (try reader.readByte()) |nextByte| {
-                        if (nextByte == '>') {
-                            if (!try handleLink(allocator, &reader, &writer)) {
-                                break;
-                            }
-                        } else if (nextByte == '\n') {
-                            try writer.writeBytes("=<br/>\n");
-                        } else {
-                            try writer.writeByte('=');
-                            try writer.writeEscapedByte(nextByte);
-                            if (!try handleLine(&reader, &writer)) {
-                                break;
-                            }
-                        }
-                    } else {
-                        try writer.writeByte('=');
-                        break;
-                    }
-                },
-                '`' => {
-                    if (try reader.readByte()) |nextByte1| {
-                        if (nextByte1=='`') {
-                            if (try reader.readByte()) |nextByte2| {
-                                if (nextByte2=='`') {
-                                    try handlePreformat(&reader, &writer);
-                                } else if (nextByte2=='\n') {
-                                    try writer.writeBytes("``<br/>");
-                                } else {
-                                    try writer.writeBytes("``");
-                                    try writer.writeEscapedByte(nextByte2);
-                                    if (!try handleLine(&reader, &writer)) {
-                                        break;
-                                    }
-                                }
-                            } else {
-                                try writer.writeBytes("``");
-                                break;
-                            }
-                        } else if (nextByte1=='\n') {
-                            try writer.writeBytes("`<br/>");
-                        } else {
-                            try writer.writeByte('`');
-                            try writer.writeEscapedByte(nextByte1);
-                            if (!try handleLine(&reader, &writer)) {
-                                break;
-                            }
-                        }
-                    } else {
-                        try writer.writeByte('`');
-                        break;
-                    }
-                },
-                '#' => {
-                    if (try reader.readByte()) |nextByte1| {
-                        if (nextByte1=='#') {
-                            if (try reader.readByte()) |nextByte2| {
-                                if (nextByte2=='#') {
-                                    try handleHeader('3', &reader, &writer);
-                                } else {
-                                    try handleHeader('2', &reader, &writer);
-                                }
-                            } else {
-                                try writer.writeBytes("<h2></h2>");
-                                break;
-                            }
-                        } else {
-                            try handleHeader('1', &reader, &writer);
-                        }
-                    } else {
-                        try writer.writeBytes("<h1></h1>");
-                        break;
-                    }
-                },
-                '*' => {
-                    try writer.writeBytes("<ul>\n<li>");
-                    const newline = try handleLine(&reader, &writer);
-                    try writer.writeBytes("</li>\n");
-                    if (!newline) {
-                        try writer.writeBytes("</ul>");
-                        break;
-                    }
-                    state = .BulletLineStart;
-                },
-                '>' => {
-                    try handleQuote(&reader, &writer);
-                },
-                else => {
-                    try writer.writeEscapedByte(byte);
-                    if (!try handleLineSkippingWhitespace(&reader, &writer)) {
-                        break;
-                    }
-                    try writer.writeBytes("<br/>\n");
-                },
-            },
-            .BulletLineStart => {
-                if (byte=='*') {
-                    try writer.writeBytes("<li>");
-                    const newline = try handleLineSkippingWhitespace(&reader, &writer);
-                    try writer.writeBytes("</li>\n");
-                    if (!newline) {
-                        try writer.writeBytes("</ul>");
-                        break;
-                    }
-                } else if (byte=='\n') {
-                    try writer.writeBytes("</ul>\n<br/>\n");
-                    state = .LineStart;
-                } else {
-                    try writer.writeBytes("</ul>\n");
-                    try writer.writeEscapedByte(byte);
-                    if (!try handleLine(&reader, &writer)) {
-                        break;
-                    }
-                }
-            },
-        }
+    // Loops through lines
+    while (try reader.readLine()) |line| {
+        try writer.writeEscapedBytes(line);
     }
+
     try writer.flush();
 }
