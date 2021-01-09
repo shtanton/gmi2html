@@ -2,8 +2,8 @@ const std = @import("std");
 const process = std.process;
 const Allocator = std.mem.Allocator;
 
-const READ_BUFFER_INITIAL_LEN = 8192;
-const WRITE_BUFFER_LEN = 8192;
+const READ_BUFFER_INITIAL_LEN = 2*1024;
+const WRITE_BUFFER_LEN = 2*1024;
 
 fn trimLeft(str: []const u8) []const u8 {
     return std.mem.trimLeft(u8, str, &[_]u8{' ', '\t'});
