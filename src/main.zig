@@ -2,6 +2,7 @@ const std = @import("std");
 const process = std.process;
 const Allocator = std.mem.Allocator;
 
+const READ_BUFFER_INITIAL_LEN = 8192;
 const WRITE_BUFFER_LEN = 8192;
 
 fn trimLeft(str: []const u8) []const u8 {
@@ -19,7 +20,7 @@ const LineReader = struct {
 
     fn init(allocator: *Allocator, reader: std.fs.File.Reader) !Self {
         return Self {
-            .buffer = try allocator.alloc(u8, 32),
+            .buffer = try allocator.alloc(u8, READ_BUFFER_INITIAL_LEN),
             .reader = reader,
             .allocator = allocator,
             .nextLineStart = 0,
@@ -32,25 +33,31 @@ const LineReader = struct {
     }
 
     fn readLine(self: *Self) !?[]const u8 {
-        // Drop existing line
-        std.mem.copy(u8, self.buffer, self.buffer[self.nextLineStart..self.len]);
-        self.len -= self.nextLineStart;
-        self.nextLineStart = 0;
-        // Find newline char
-        while (true) : (self.nextLineStart += 1) {
-            // Load more file if necessary
-            if (self.nextLineStart >= self.len) {
+        var newlineIndex = self.nextLineStart;
+        while (true) : (newlineIndex += 1) {
+            if (newlineIndex >= self.len) {
                 if (self.len == self.buffer.len) {
-                    self.buffer = try self.allocator.realloc(self.buffer, self.buffer.len*2);
+                    if (self.nextLineStart==0) {
+                        self.buffer = try self.allocator.realloc(self.buffer, self.buffer.len*2);
+                    } else {
+                        std.mem.copy(u8, self.buffer, self.buffer[self.nextLineStart..self.len]);
+                        self.len -= self.nextLineStart;
+                        newlineIndex -= self.nextLineStart;
+                        self.nextLineStart = 0;
+                    }
                 }
                 self.len += try self.reader.read(self.buffer[self.len..]);
             }
-            if (self.len == 0) {
+            if (self.len == self.nextLineStart) {
                 return null;
             }
-            if (self.nextLineStart >= self.len or self.buffer[self.nextLineStart] == '\n') {
-                const line = self.buffer[0..self.nextLineStart];
-                self.nextLineStart += 1;
+            if (newlineIndex >= self.len) {
+                const line = self.buffer[self.nextLineStart..newlineIndex];
+                self.nextLineStart = newlineIndex;
+                return line;
+            } else if (self.buffer[newlineIndex]=='\n') {
+                const line = self.buffer[self.nextLineStart..newlineIndex];
+                self.nextLineStart = newlineIndex+1;
                 return line;
             }
         }
@@ -133,6 +140,7 @@ pub fn main() anyerror!void {
     // Loops through lines
     while (try reader.readLine()) |line| {
         try writer.writeEscapedBytes(line);
+        try writer.writeByte('\n');
     }
 
     try writer.flush();
