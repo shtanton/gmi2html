@@ -11,8 +11,8 @@ Currently, it is nice to be able to serve content on gemini on the web too. Writ
 Input is accepted as a file argument or from stdin and output written to stdout.
 
 ```
-gmi2html input.gmi > output.html
-cat input.gmi | gmi2html > output.html
+$ gmi2html input.gmi > output.html
+$ cat input.gmi | gmi2html > output.html
 ```
 
 ## Building and Installing
@@ -20,7 +20,7 @@ cat input.gmi | gmi2html > output.html
 To build
 
 ```
-zig build
+$ zig build
 ```
 
 Build options:
@@ -31,10 +31,17 @@ Build options:
 To install, you need zig 0.7.0 or 0.7.1 (other versions might work but I haven't tested them) then run
 
 ```
-zig build --prefix /usr install
+$ zig build --prefix /usr install
 ```
 
-Use one of the build modes when installing so the debug code isn't left in which will bloat it.
+Use one of the build modes when installing so the debug code isn't left in.
+
+To build and install the man pages you need `scdoc`:
+
+```
+$ scdoc < docs/gmi2html.scdoc > docs/gmi2html.1
+# install docs/gmi2html.1 /usr/share/man/man1/gmi2html.1
+```
 
 It is also available on the AUR as `gmi2html`.
 
