@@ -16,13 +16,29 @@ const audioExtensions = [_][]const u8{
     ".wav",
     ".ogg",
 };
+const HTTPS_SCHEME = "https";
 
 fn trimLeft(str: []const u8) []const u8 {
     return std.mem.trimLeft(u8, str, &[_]u8{' ', '\t'});
 }
 
 fn isWebUrl(url: []const u8) bool {
-    return std.mem.eql(u8, url[0..7], "http://") or std.mem.eql(u8, url[0..8], "https://");
+    const scheme = for (url) |char, i| {
+        if (char == ':') {
+            break url[0..i];
+        } else if (char == '/') {
+            return true;
+        }
+    } else return true;
+    if (scheme.len > 5 or scheme.len < 4) {
+        return false;
+    }
+    for (scheme) |char, i| {
+        if (std.ascii.toLower(char) != HTTPS_SCHEME[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 fn matchesExtension(url: []const u8, extensions: []const []const u8) bool {
@@ -120,12 +136,18 @@ fn handleLine(line: []const u8, writer: *ByteWriter, state: *State) !void {
                 try writer.writeBytes("\">");
                 try writer.writeEscapedBytes(text);
                 try writer.writeBytes("</a></audio><br/>\n");
-            } else {
+            } else if (isWebUrl(url)) {
                 try writer.writeBytes("<a href=\"");
                 try writer.writeEscapedBytes(url);
                 try writer.writeBytes("\">");
                 try writer.writeEscapedBytes(text);
                 try writer.writeBytes("</a><br/>\n");
+            } else {
+                try writer.writeEscapedBytes("=> ");
+                try writer.writeEscapedBytes(url);
+                try writer.writeByte(' ');
+                try writer.writeEscapedBytes(text);
+                try writer.writeByte('\n');
             }
             return;
         }

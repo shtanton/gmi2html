@@ -20,7 +20,7 @@ if ./zig-cache/bin/gmi2html --inline-video < tests/source.gmi | diff -q tests/vi
 then
     :
 else
-    echo "FAIL: translation with inlined images did not match tests/image_target.html"
+    echo "FAIL: translation with inlined video did not match tests/image_target.html"
     exit 1
 fi
 
@@ -28,7 +28,7 @@ if ./zig-cache/bin/gmi2html --inline-audio < tests/source.gmi | diff -q tests/au
 then
     :
 else
-    echo "FAIL: translation with inlined images did not match tests/image_target.html"
+    echo "FAIL: translation with inlined audio did not match tests/image_target.html"
     exit 1
 fi
 
@@ -36,7 +36,7 @@ if ./zig-cache/bin/gmi2html --inline-all < tests/source.gmi | diff -q tests/inli
 then
     :
 else
-    echo "FAIL: translation with inlined images did not match tests/image_target.html"
+    echo "FAIL: translation with inlined everything did not match tests/image_target.html"
     exit 1
 fi
 
