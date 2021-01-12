@@ -6,13 +6,12 @@ gmi2html - Translate gemtext into HTML
 
 # SYNOPSIS
 
-*gmi2html* [OPTIONS] _input.gmi_++
-*gmi2html* [OPTIONS] < _input.gmi_
+*gmi2html* [OPTIONS] < _input.gmi_ > _output.html_
 
 # DESCRIPTION
 
-*gmi2html* accepts gemtext either from a file or stdin, and writes an HTML
-translation to stdout.
+*gmi2html* accepts gemtext either from stdin, and writes an HTML translation to
+stdout.
 
 # OPTIONS
 
@@ -30,4 +29,5 @@ translation to stdout.
 
 # AUTHORS
 
-Maintained by Charlie Stanton <charlie@shtanton.com>. Homepage at https://github.com/shtanton/gmi2html.
+Maintained by Charlie Stanton <charlie@shtanton.com>.
+Homepage at https://github.com/shtanton/gmi2html.

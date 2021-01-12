@@ -173,7 +173,7 @@ fn handleLine(line: []const u8, writer: *ByteWriter, state: *State) !void {
     return writer.writeBytes("<br/>\n");
 }
 
-pub fn main() anyerror!void {
+pub fn main() anyerror!u8 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = &arena.allocator;
@@ -183,28 +183,29 @@ pub fn main() anyerror!void {
     _ = args.skip();
     var state = State {};
 
-    const inputFile = while (args.next(allocator)) |arg| {
-        if (std.mem.eql(u8, try arg, "--inline-images")) {
+    while (args.next(allocator)) |maybeArg| {
+        const arg = try maybeArg;
+        if (std.mem.eql(u8, arg, "--inline-images")) {
             state.inlineImages = true;
-        } else if (std.mem.eql(u8, try arg, "--inline-video")) {
+        } else if (std.mem.eql(u8, arg, "--inline-video")) {
             state.inlineVideo = true;
-        } else if (std.mem.eql(u8, try arg, "--inline-audio")) {
+        } else if (std.mem.eql(u8, arg, "--inline-audio")) {
             state.inlineAudio = true;
-        } else if (std.mem.eql(u8, try arg, "--inline-all")) {
+        } else if (std.mem.eql(u8, arg, "--inline-all")) {
             state.inlineImages = true;
             state.inlineVideo = true;
             state.inlineAudio = true;
         } else {
-            break try std.fs.cwd().openFile(try arg, .{.read = true});
+            return error.UnrecognizedArgument;
         }
-    } else std.io.getStdIn();
-    defer inputFile.close();
+    }
 
-    var reader = try LineReader.init(allocator, inputFile.reader());
+    var reader = try LineReader.init(allocator, std.io.getStdIn().reader());
     var writer = ByteWriter.init(std.io.getStdOut().writer());
 
     while (try reader.readLine()) |line| {
         try handleLine(line, &writer, &state);
     }
     try writer.flush();
+    return 0;
 }
