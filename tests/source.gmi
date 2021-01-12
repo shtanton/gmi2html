@@ -11,6 +11,12 @@ I write things here
 => foo/bar/baz.txt  A relative link
 =>  gopher://example.org:70/1 A gopher link
 =>https://google.com/<>&"'
+=> http://example.org/testimg.png
+=>  https://example.org/testimg.gif    	A cool test image
+=> https://example.org:443/test.jpeg
+=> gemini://example.org/testimg.png
+=> https://example.org/video.mp4 test video
+=> https://example.org/audio.mp3 test audio
 
 ```  	Alt text
 some stuff

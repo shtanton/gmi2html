@@ -6,13 +6,27 @@ gmi2html - Translate gemtext into HTML
 
 # SYNOPSIS
 
-*gmi2html* _input.gmi_
-*gmi2html* < _input.gmi_
+*gmi2html* [OPTIONS] _input.gmi_++
+*gmi2html* [OPTIONS] < _input.gmi_
 
 # DESCRIPTION
 
 *gmi2html* accepts gemtext either from a file or stdin, and writes an HTML
 translation to stdout.
+
+# OPTIONS
+
+*--inline-images*
+	Translate links to images on the web (png,git,jpg,jpeg) to <img> elements
+
+*--inline-audio*
+	Translate links to audio on the web (mp3,wav,ogg) to <audio> elements
+
+*--inline-video*
+	Translate links to videos on the web (mp4) to <video> elements
+
+*--inline-all*
+	Short for *--inline-images --inline-video --inline-audio*
 
 # AUTHORS
 

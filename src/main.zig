@@ -2,13 +2,44 @@ const std = @import("std");
 const LineReader = @import("LineReader.zig").LineReader;
 const ByteWriter = @import("ByteWriter.zig").ByteWriter;
 
+const imageExtensions = [_][]const u8{
+    ".png",
+    ".jpeg",
+    ".jpg",
+    ".gif",
+};
+const videoExtensions = [_][]const u8{
+    ".mp4",
+};
+const audioExtensions = [_][]const u8{
+    ".mp3",
+    ".wav",
+    ".ogg",
+};
+
 fn trimLeft(str: []const u8) []const u8 {
     return std.mem.trimLeft(u8, str, &[_]u8{' ', '\t'});
+}
+
+fn isWebUrl(url: []const u8) bool {
+    return std.mem.eql(u8, url[0..7], "http://") or std.mem.eql(u8, url[0..8], "https://");
+}
+
+fn matchesExtension(url: []const u8, extensions: []const []const u8) bool {
+    for (extensions) |extension| {
+        if (url.len >= extension.len and std.mem.eql(u8, url[url.len-extension.len..], extension)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 const State = struct {
     bullets: bool = false,
     preformatted: bool = false,
+    inlineImages: bool = false,
+    inlineVideo: bool = false,
+    inlineAudio: bool = false,
 };
 
 fn handleLine(line: []const u8, writer: *ByteWriter, state: *State) !void {
@@ -55,17 +86,48 @@ fn handleLine(line: []const u8, writer: *ByteWriter, state: *State) !void {
         if (line[0] == '=' and line[1] == '>') {
             const contents = trimLeft(line[2..]);
             var spaceIndex: usize = 0;
-            while (spaceIndex < contents.len and !(contents[spaceIndex] == ' ' or contents[spaceIndex] == '\t')) : (spaceIndex += 1) {}
+            while (spaceIndex < contents.len) : (spaceIndex += 1) {
+                if (contents[spaceIndex] == ' ' or contents[spaceIndex] == '\t') break;
+            }
             const url = contents[0..spaceIndex];
             var text = trimLeft(contents[spaceIndex..]);
             if (text.len == 0) {
                 text = url;
             }
+            if (state.inlineImages and isWebUrl(url) and matchesExtension(url, &imageExtensions)) {
             try writer.writeBytes("<a href=\"");
             try writer.writeEscapedBytes(url);
             try writer.writeBytes("\">");
-            try writer.writeEscapedBytes(text);
-            return writer.writeBytes("</a><br/>\n");
+                try writer.writeBytes("<img src=\"");
+                try writer.writeEscapedBytes(url);
+                try writer.writeBytes("\" alt=\"");
+                try writer.writeEscapedBytes(text);
+                try writer.writeBytes("\"/>");
+                try writer.writeBytes("</a><br/>\n");
+            } else if (state.inlineVideo and isWebUrl(url) and matchesExtension(url, &videoExtensions)) {
+                try writer.writeBytes("<video src=\"");
+                try writer.writeEscapedBytes(url);
+                try writer.writeBytes("\"><a src=\"");
+                try writer.writeEscapedBytes(url);
+                try writer.writeBytes("\">");
+                try writer.writeEscapedBytes(text);
+                try writer.writeBytes("</a></video><br/>\n");
+            } else if (state.inlineAudio and isWebUrl(url) and matchesExtension(url, &audioExtensions)) {
+                try writer.writeBytes("<audio src=\"");
+                try writer.writeEscapedBytes(url);
+                try writer.writeBytes("\"><a src=\"");
+                try writer.writeEscapedBytes(url);
+                try writer.writeBytes("\">");
+                try writer.writeEscapedBytes(text);
+                try writer.writeBytes("</a></audio><br/>\n");
+            } else {
+                try writer.writeBytes("<a href=\"");
+                try writer.writeEscapedBytes(url);
+                try writer.writeBytes("\">");
+                try writer.writeEscapedBytes(text);
+                try writer.writeBytes("</a><br/>\n");
+            }
+            return;
         }
     }
     if (line.len >= 1) {
@@ -97,16 +159,27 @@ pub fn main() anyerror!void {
     var args = std.process.args();
     defer args.deinit();
     _ = args.skip();
+    var state = State {};
 
-    const inputFile = if (args.next(allocator)) |arg| blk: {
-        break :blk try std.fs.cwd().openFile(try arg, .{.read = true});
-    }
-    else
-        std.io.getStdIn();
+    const inputFile = while (args.next(allocator)) |arg| {
+        if (std.mem.eql(u8, try arg, "--inline-images")) {
+            state.inlineImages = true;
+        } else if (std.mem.eql(u8, try arg, "--inline-video")) {
+            state.inlineVideo = true;
+        } else if (std.mem.eql(u8, try arg, "--inline-audio")) {
+            state.inlineAudio = true;
+        } else if (std.mem.eql(u8, try arg, "--inline-all")) {
+            state.inlineImages = true;
+            state.inlineVideo = true;
+            state.inlineAudio = true;
+        } else {
+            break try std.fs.cwd().openFile(try arg, .{.read = true});
+        }
+    } else std.io.getStdIn();
     defer inputFile.close();
+
     var reader = try LineReader.init(allocator, inputFile.reader());
     var writer = ByteWriter.init(std.io.getStdOut().writer());
-    var state = State {};
 
     while (try reader.readLine()) |line| {
         try handleLine(line, &writer, &state);
