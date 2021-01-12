@@ -39,8 +39,8 @@ Use one of the build modes when installing so the debug code isn't left in.
 To build and install the man pages you need `scdoc`:
 
 ```
-$ scdoc < docs/gmi2html.scdoc > docs/gmi2html.1
-# install docs/gmi2html.1 /usr/share/man/man1/gmi2html.1
+$ scdoc < doc/gmi2html.scdoc > doc/gmi2html.1
+# install doc/gmi2html.1 /usr/share/man/man1/gmi2html.1
 ```
 
 It is also available on the AUR as `gmi2html`.
