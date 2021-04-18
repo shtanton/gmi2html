@@ -173,6 +173,19 @@ fn handleLine(line: []const u8, writer: *ByteWriter, state: *State) !void {
     return writer.writeBytes("<br/>\n");
 }
 
+const help =
+    \\Usage: gmi2html [options]
+    \\
+    \\Reads text/gemini from stdin and writes HTML to stdout.
+    \\
+    \\Options:
+    \\--inline-images        Translate links to images as <img> elements
+    \\--inline-video         Translate links to videos as <video> elements
+    \\--inline-audio         Translate links to audio as <audio> elements
+    \\--inline-all           Short for --inline-images --inline-video --inline-audio
+    \\
+;
+
 pub fn main() anyerror!u8 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
@@ -182,6 +195,8 @@ pub fn main() anyerror!u8 {
     defer args.deinit();
     _ = args.skip();
     var state = State {};
+    const stderr = std.io.getStdErr().writer();
+    const stdout = std.io.getStdOut().writer();
 
     while (args.next(allocator)) |maybeArg| {
         const arg = try maybeArg;
@@ -196,12 +211,14 @@ pub fn main() anyerror!u8 {
             state.inlineVideo = true;
             state.inlineAudio = true;
         } else {
-            return error.UnrecognizedArgument;
+            try stderr.print("Unrecognized option: {}\n\n", .{arg});
+            try stderr.writeAll(help);
+            return 1;
         }
     }
 
     var reader = try LineReader.init(allocator, std.io.getStdIn().reader());
-    var writer = ByteWriter.init(std.io.getStdOut().writer());
+    var writer = ByteWriter.init(stdout);
 
     while (try reader.readLine()) |line| {
         try handleLine(line, &writer, &state);
