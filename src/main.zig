@@ -121,7 +121,7 @@ fn handleLine(line: []const u8, writer: *ByteWriter, state: *State) !void {
                 try writer.writeBytes("\"/>");
                 try writer.writeBytes("</a><br/>\n");
             } else if (state.inlineVideo and isWebUrl(url) and matchesExtension(url, &videoExtensions)) {
-                try writer.writeBytes("<video src=\"");
+                try writer.writeBytes("<video controls src=\"");
                 try writer.writeEscapedBytes(url);
                 try writer.writeBytes("\"><a src=\"");
                 try writer.writeEscapedBytes(url);
@@ -129,7 +129,7 @@ fn handleLine(line: []const u8, writer: *ByteWriter, state: *State) !void {
                 try writer.writeEscapedBytes(text);
                 try writer.writeBytes("</a></video><br/>\n");
             } else if (state.inlineAudio and isWebUrl(url) and matchesExtension(url, &audioExtensions)) {
-                try writer.writeBytes("<audio src=\"");
+                try writer.writeBytes("<audio controls src=\"");
                 try writer.writeEscapedBytes(url);
                 try writer.writeBytes("\"><a src=\"");
                 try writer.writeEscapedBytes(url);
