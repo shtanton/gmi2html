@@ -27,6 +27,12 @@ stdout.
 *--inline-all*
 	Short for *--inline-images --inline-video --inline-audio*
 
+*--help*
+	Display a help message
+
+*--version*
+	Display version
+
 # AUTHORS
 
 Maintained by Charlie Stanton <charlie@shtanton.com>.
