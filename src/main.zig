@@ -183,6 +183,8 @@ const help =
     \\--inline-video         Translate links to videos as <video> elements
     \\--inline-audio         Translate links to audio as <audio> elements
     \\--inline-all           Short for --inline-images --inline-video --inline-audio
+    \\--help                 Display this message
+    \\--version              Display version
     \\
 ;
 
@@ -210,6 +212,12 @@ pub fn main() anyerror!u8 {
             state.inlineImages = true;
             state.inlineVideo = true;
             state.inlineAudio = true;
+        } else if (std.mem.eql(u8, arg, "--help")) {
+            try stdout.writeAll(help);
+            return 0;
+        } else if (std.mem.eql(u8, arg, "--version")) {
+            try stdout.writeAll("gmi2html v0.2.1\n");
+            return 0;
         } else {
             try stderr.print("Unrecognized option: {}\n\n", .{arg});
             try stderr.writeAll(help);
