@@ -111,43 +111,41 @@ fn handleLine(line: []const u8, writer: *ByteWriter, state: *State) !void {
                 text = url;
             }
             if (state.inlineImages and isWebUrl(url) and matchesExtension(url, &imageExtensions)) {
-            try writer.writeBytes("<a href=\"");
-            try writer.writeEscapedBytes(url);
-            try writer.writeBytes("\">");
+                try writer.writeBytes("<a style=\"display: block;\" href=\"");
+                try writer.writeEscapedBytes(url);
+                try writer.writeBytes("\">");
                 try writer.writeBytes("<img src=\"");
                 try writer.writeEscapedBytes(url);
                 try writer.writeBytes("\" alt=\"");
                 try writer.writeEscapedBytes(text);
                 try writer.writeBytes("\"/>");
-                try writer.writeBytes("</a><br/>\n");
+                try writer.writeBytes("</a>\n");
             } else if (state.inlineVideo and isWebUrl(url) and matchesExtension(url, &videoExtensions)) {
-                try writer.writeBytes("<video controls src=\"");
+                try writer.writeBytes("<video style=\"display: block;\" controls src=\"");
                 try writer.writeEscapedBytes(url);
                 try writer.writeBytes("\"><a src=\"");
                 try writer.writeEscapedBytes(url);
                 try writer.writeBytes("\">");
                 try writer.writeEscapedBytes(text);
-                try writer.writeBytes("</a></video><br/>\n");
+                try writer.writeBytes("</a></video>\n");
             } else if (state.inlineAudio and isWebUrl(url) and matchesExtension(url, &audioExtensions)) {
-                try writer.writeBytes("<audio controls src=\"");
+                try writer.writeBytes("<audio style=\"display: block;\" controls src=\"");
                 try writer.writeEscapedBytes(url);
                 try writer.writeBytes("\"><a src=\"");
                 try writer.writeEscapedBytes(url);
                 try writer.writeBytes("\">");
                 try writer.writeEscapedBytes(text);
-                try writer.writeBytes("</a></audio><br/>\n");
+                try writer.writeBytes("</a></audio>\n");
             } else if (isWebUrl(url)) {
-                try writer.writeBytes("<a href=\"");
+                try writer.writeBytes("<a style=\"display: block;\" href=\"");
                 try writer.writeEscapedBytes(url);
                 try writer.writeBytes("\">");
                 try writer.writeEscapedBytes(text);
-                try writer.writeBytes("</a><br/>\n");
+                try writer.writeBytes("</a>\n");
             } else {
-                try writer.writeEscapedBytes("=> ");
-                try writer.writeEscapedBytes(url);
-                try writer.writeByte(' ');
-                try writer.writeEscapedBytes(text);
-                try writer.writeByte('\n');
+                try writer.writeBytes("<p>");
+                try writer.writeEscapedBytes(line);
+                return writer.writeBytes("</p>\n");
             }
             return;
         }
@@ -169,8 +167,13 @@ fn handleLine(line: []const u8, writer: *ByteWriter, state: *State) !void {
             return writer.writeBytes("</blockquote>\n");
         }
     }
-    try writer.writeEscapedBytes(line);
-    return writer.writeBytes("<br/>\n");
+    try writer.writeBytes("<p>");
+    if (line.len == 0) {
+        try writer.writeBytes("<br/>");
+    } else {
+        try writer.writeEscapedBytes(line);
+    }
+    return writer.writeBytes("</p>\n");
 }
 
 const help =
@@ -216,7 +219,7 @@ pub fn main() anyerror!u8 {
             try stdout.writeAll(help);
             return 0;
         } else if (std.mem.eql(u8, arg, "--version")) {
-            try stdout.writeAll("gmi2html v0.2.1\n");
+            try stdout.writeAll("gmi2html v0.3.0\n");
             return 0;
         } else {
             try stderr.print("Unrecognized option: {}\n\n", .{arg});
