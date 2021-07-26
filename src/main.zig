@@ -219,7 +219,7 @@ pub fn main() anyerror!u8 {
             try stdout.writeAll(help);
             return 0;
         } else if (std.mem.eql(u8, arg, "--version")) {
-            try stdout.writeAll("gmi2html v0.3.0\n");
+            try stdout.writeAll("gmi2html v0.4.0\n");
             return 0;
         } else {
             try stderr.print("Unrecognized option: {s}\n\n", .{arg});
