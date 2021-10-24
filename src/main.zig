@@ -7,6 +7,7 @@ const imageExtensions = [_][]const u8{
     ".jpeg",
     ".jpg",
     ".gif",
+    ".webp",
 };
 const videoExtensions = [_][]const u8{
     ".mp4",
