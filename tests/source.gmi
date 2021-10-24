@@ -17,6 +17,7 @@ I write things here
 => gemini://example.org/testimg.png
 => https://example.org/video.mp4 test video
 => https://example.org/audio.mp3 test audio
+=> http://example.org/testimg.webp
 
 ```  	Alt text
 some stuff
