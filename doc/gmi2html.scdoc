@@ -16,7 +16,7 @@ stdout.
 # OPTIONS
 
 *--inline-images*
-	Translate links to images on the web (png,git,jpg,jpeg) to <img> elements
+	Translate links to images on the web (png,git,jpg,jpeg,webp) to <img> elements
 
 *--inline-audio*
 	Translate links to audio on the web (mp3,wav,ogg) to <audio> elements
