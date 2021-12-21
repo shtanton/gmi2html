@@ -20,7 +20,7 @@ const audioExtensions = [_][]const u8{
 const HTTPS_SCHEME = "https";
 
 fn trimLeft(str: []const u8) []const u8 {
-    return std.mem.trimLeft(u8, str, &[_]u8{' ', '\t'});
+    return std.mem.trimLeft(u8, str, &[_]u8{ ' ', '\t' });
 }
 
 fn isWebUrl(url: []const u8) bool {
@@ -44,7 +44,7 @@ fn isWebUrl(url: []const u8) bool {
 
 fn matchesExtension(url: []const u8, extensions: []const []const u8) bool {
     for (extensions) |extension| {
-        if (url.len >= extension.len and std.mem.eql(u8, url[url.len-extension.len..], extension)) {
+        if (url.len >= extension.len and std.mem.eql(u8, url[url.len - extension.len ..], extension)) {
             return true;
         }
     }
@@ -195,12 +195,12 @@ const help =
 pub fn main() anyerror!u8 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
-    const allocator = &arena.allocator;
+    const allocator = arena.allocator();
 
     var args = std.process.args();
     defer args.deinit();
     _ = args.skip();
-    var state = State {};
+    var state = State{};
     const stderr = std.io.getStdErr().writer();
     const stdout = std.io.getStdOut().writer();
 
