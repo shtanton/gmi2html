@@ -28,7 +28,7 @@ Build options:
 - `-Drelease-small` slightly slower but much smaller binary, especially with `-Dstrip`.
 - `-Drelease-fast` fastest possible binary.
 
-To install, you need zig 0.8.0 (other versions might work but I haven't tested them) then run
+To install, you need zig 0.9.0 (other versions might work but I haven't tested them) then run
 
 ```
 $ zig build --prefix /usr install
