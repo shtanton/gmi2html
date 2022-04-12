@@ -17,7 +17,11 @@ const audioExtensions = [_][]const u8{
     ".wav",
     ".ogg",
 };
-const HTTPS_SCHEME = "https";
+const WEB_SCHEMES = [_][]const u8{
+    "http",
+    "https",
+    "mailto",
+};
 
 fn trimLeft(str: []const u8) []const u8 {
     return std.mem.trimLeft(u8, str, &[_]u8{ ' ', '\t' });
@@ -31,15 +35,12 @@ fn isWebUrl(url: []const u8) bool {
             return true;
         }
     } else return true;
-    if (scheme.len > 5 or scheme.len < 4) {
-        return false;
-    }
-    for (scheme) |char, i| {
-        if (std.ascii.toLower(char) != HTTPS_SCHEME[i]) {
-            return false;
+    for (WEB_SCHEMES) |web_scheme| {
+        if (std.mem.eql(u8, scheme, web_scheme)) {
+            return true;
         }
     }
-    return true;
+    return false;
 }
 
 fn matchesExtension(url: []const u8, extensions: []const []const u8) bool {
@@ -220,7 +221,7 @@ pub fn main() anyerror!u8 {
             try stdout.writeAll(help);
             return 0;
         } else if (std.mem.eql(u8, arg, "--version")) {
-            try stdout.writeAll("gmi2html v0.4.0\n");
+            try stdout.writeAll("gmi2html v0.4.1\n");
             return 0;
         } else {
             try stderr.print("Unrecognized option: {s}\n\n", .{arg});

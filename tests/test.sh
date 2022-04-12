@@ -1,6 +1,6 @@
 #!/usr/bin/sh
 zig build
-if ./zig-cache/bin/gmi2html < tests/source.gmi | diff -q tests/target.html - >/dev/null
+if ./zig-out/bin/gmi2html < tests/source.gmi | diff -q tests/target.html - >/dev/null
 then
     :
 else
@@ -8,7 +8,7 @@ else
     exit 1
 fi
 
-if ./zig-cache/bin/gmi2html --inline-images < tests/source.gmi | diff -q tests/image_target.html - >/dev/null
+if ./zig-out/bin/gmi2html --inline-images < tests/source.gmi | diff -q tests/image_target.html - >/dev/null
 then
     :
 else
@@ -16,7 +16,7 @@ else
     exit 1
 fi
 
-if ./zig-cache/bin/gmi2html --inline-video < tests/source.gmi | diff -q tests/video_target.html - >/dev/null
+if ./zig-out/bin/gmi2html --inline-video < tests/source.gmi | diff -q tests/video_target.html - >/dev/null
 then
     :
 else
@@ -24,7 +24,7 @@ else
     exit 1
 fi
 
-if ./zig-cache/bin/gmi2html --inline-audio < tests/source.gmi | diff -q tests/audio_target.html - >/dev/null
+if ./zig-out/bin/gmi2html --inline-audio < tests/source.gmi | diff -q tests/audio_target.html - >/dev/null
 then
     :
 else
@@ -32,7 +32,7 @@ else
     exit 1
 fi
 
-if ./zig-cache/bin/gmi2html --inline-all < tests/source.gmi | diff -q tests/inlined_target.html - >/dev/null
+if ./zig-out/bin/gmi2html --inline-all < tests/source.gmi | diff -q tests/inlined_target.html - >/dev/null
 then
     :
 else
