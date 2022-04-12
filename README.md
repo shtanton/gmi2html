@@ -8,11 +8,10 @@ Currently, it is nice to be able to serve content on gemini on the web too. Writ
 
 ## Usage
 
-Input is accepted as a file argument or from stdin and output written to stdout.
+Input is accepted from stdin and output written to stdout.
 
 ```
-$ gmi2html input.gmi > output.html
-$ cat input.gmi | gmi2html > output.html
+$ gmi2html < input.gmi > output.html
 ```
 
 ## Building and Installing
