@@ -26,6 +26,7 @@ Build options:
 - `-Drelease-safe` leaves safety checks so bugs lead to errors instead of undefined behaviour.
 - `-Drelease-small` slightly slower but much smaller binary, especially with `-Dstrip`.
 - `-Drelease-fast` fastest possible binary.
+- `-Dman-pages` build and install man pages (requires `scdoc`).
 
 To install, you need zig 0.9.0 (other versions might work but I haven't tested them) then run
 
@@ -34,13 +35,6 @@ $ zig build --prefix /usr install
 ```
 
 Use one of the build modes when installing so the debug code isn't left in.
-
-To build and install the man pages you need `scdoc`:
-
-```
-$ scdoc < doc/gmi2html.scdoc > doc/gmi2html.1
-# install doc/gmi2html.1 /usr/share/man/man1/gmi2html.1
-```
 
 It is also available on the AUR as `gmi2html`.
 
