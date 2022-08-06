@@ -55,6 +55,7 @@ fn matchesExtension(url: []const u8, extensions: []const []const u8) bool {
 const State = struct {
     bullets: bool = false,
     preformatted: bool = false,
+    ignoreEmptyLines: bool = false,
     inlineImages: bool = false,
     inlineVideo: bool = false,
     inlineAudio: bool = false,
@@ -169,13 +170,13 @@ fn handleLine(line: []const u8, writer: *ByteWriter, state: *State) !void {
             return writer.writeBytes("</blockquote>\n");
         }
     }
-    try writer.writeBytes("<p>");
     if (line.len == 0) {
-        try writer.writeBytes("<br/>");
+        if (!state.ignoreEmptyLines) return writer.writeBytes("<p><br/></p>\n");
     } else {
+        try writer.writeBytes("<p>");
         try writer.writeEscapedBytes(line);
+        return writer.writeBytes("</p>\n");
     }
-    return writer.writeBytes("</p>\n");
 }
 
 const help =
@@ -184,6 +185,7 @@ const help =
     \\Reads text/gemini from stdin and writes HTML to stdout.
     \\
     \\Options:
+    \\--ignore-empty-lines   Do not convert empty lines into <p><br/></p> elements
     \\--inline-images        Translate links to images as <img> elements
     \\--inline-video         Translate links to videos as <video> elements
     \\--inline-audio         Translate links to audio as <audio> elements
@@ -207,7 +209,9 @@ pub fn main() anyerror!u8 {
 
     while (args.next(allocator)) |maybeArg| {
         const arg = try maybeArg;
-        if (std.mem.eql(u8, arg, "--inline-images")) {
+        if (std.mem.eql(u8, arg, "--ignore-empty-lines")) {
+            state.ignoreEmptyLines = true;
+        } else if (std.mem.eql(u8, arg, "--inline-images")) {
             state.inlineImages = true;
         } else if (std.mem.eql(u8, arg, "--inline-video")) {
             state.inlineVideo = true;
