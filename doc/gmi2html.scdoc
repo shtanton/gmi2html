@@ -15,6 +15,9 @@ stdout.
 
 # OPTIONS
 
+*--ignore-empty-lines*
+    Do not convert empty lines into <p><br/></p> elements
+
 *--inline-images*
 	Translate links to images on the web (png,git,jpg,jpeg,webp) to <img> elements
 

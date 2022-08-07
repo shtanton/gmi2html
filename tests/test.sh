@@ -8,6 +8,14 @@ else
     exit 1
 fi
 
+if ./zig-out/bin/gmi2html --ignore-empty-lines < tests/source.gmi | diff -q tests/ignore_empty_lines_target.html - >/dev/null
+then
+    :
+else
+    echo "FAIL: translation ignoring empty lines did not match tests/ignore_empty_lines_target.html"
+    exit 1
+fi
+
 if ./zig-out/bin/gmi2html --inline-images < tests/source.gmi | diff -q tests/image_target.html - >/dev/null
 then
     :
