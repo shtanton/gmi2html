@@ -15,6 +15,6 @@ jobs:
       - uses: goto-bus-stop/setup-zig@v1
         with:
           version: 0.9.1
-      - run: zig fmt --check src/**/*.zig
+      - run: zig fmt --check src/*.zig
       - run: zig build
       - run: mv tests/test.sh . && ./test.sh
