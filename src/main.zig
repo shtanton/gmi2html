@@ -205,8 +205,7 @@ pub fn main() anyerror!u8 {
     const stderr = std.io.getStdErr().writer();
     const stdout = std.io.getStdOut().writer();
 
-    while (args.next(allocator)) |maybeArg| {
-        const arg = try maybeArg;
+    while (args.next()) |arg| {
         if (std.mem.eql(u8, arg, "--inline-images")) {
             state.inlineImages = true;
         } else if (std.mem.eql(u8, arg, "--inline-video")) {
