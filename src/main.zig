@@ -28,7 +28,7 @@ fn trimLeft(str: []const u8) []const u8 {
 }
 
 fn isWebUrl(url: []const u8) bool {
-    const scheme = for (url) |char, i| {
+    const scheme = for (url, 0..) |char, i| {
         if (char == ':') {
             break url[0..i];
         } else if (char == '/') {
@@ -198,7 +198,7 @@ pub fn main() anyerror!u8 {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    var args = std.process.args();
+    var args = try std.process.argsWithAllocator(allocator);
     defer args.deinit();
     _ = args.skip();
     var state = State{};
