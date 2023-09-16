@@ -23,9 +23,9 @@ $ zig build
 ```
 
 Build options:
-- `-Drelease-safe` leaves safety checks so bugs lead to errors instead of undefined behaviour.
-- `-Drelease-small` slightly slower but much smaller binary, especially with `-Dstrip`.
-- `-Drelease-fast` fastest possible binary.
+- `-Doptimize=ReleaseSafe` leaves safety checks so bugs lead to errors instead of undefined behaviour.
+- `-Doptimize=ReleaseSmall` slightly slower but much smaller binary, especially with `-Dstrip`.
+- `-Doptimize=ReleaseFast` fastest possible binary.
 
 To install, you need zig 0.11.0 (other versions might work but I haven't tested them) then run
 
