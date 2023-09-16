@@ -2,18 +2,21 @@ const Builder = @import("std").build.Builder;
 
 pub fn build(b: *Builder) void {
     const target = b.standardTargetOptions(.{});
-    const mode = b.standardReleaseOptions();
+    const optimize = b.standardOptimizeOption(.{});
 
     const strip = b.option(bool, "strip", "Set to true to strip binary") orelse false;
 
-    const exe = b.addExecutable("gmi2html", "src/main.zig");
-    exe.setTarget(target);
-    exe.setBuildMode(mode);
+    const exe = b.addExecutable(.{
+        .name = "gmi2html",
+        .root_source_file = .{ .path = "src/main.zig" },
+        .target = target,
+        .optimize = optimize,
+        .single_threaded = true,
+    });
     exe.strip = strip;
-    exe.single_threaded = true;
-    exe.install();
+    b.installArtifact(exe);
 
-    const run_cmd = exe.run();
+    const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
     if (b.args) |args| {
         run_cmd.addArgs(args);
